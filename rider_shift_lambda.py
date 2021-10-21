@@ -1,35 +1,52 @@
 from utils import *
-from sql import rider_shifts_sql
+from sql import *
+from datetime import datetime, timedelta
 
-ID = 'ID'
-SHIFT_START_DATE = 'Shift Start Date'
-SHIFT_START_TIME = 'Shift Start Time'
-SHIFT_END_DATE = 'Shift End Date'
-SHIFT_END_TIME = 'Shift End Time'
-HOT_SPOT = 'HotSpot'
-CITY = 'City'
-RIDER_REQUIRED = 'Rider Required'
+AGENT_ID = 'Agent ID'
+AGENT_NAME = 'Agent Name'
+AGENT_EMAIL = "Agent Email"
+AGENT_LAST_LOGIN = "Agent Last Login"
+RIDER_ID = 'Rider ID'
+RIDER_NAME = 'Rider Name'
+ACTION = 'Action'
+MESSAGE = 'Message'
+DATETIME = "Date & Time"
 
 
-def rider_fill_rate(start_date, end_date):
-    connection = connect_to_db()
-    cursor = connection.cursor()
-    cursor.execute(rider_shifts_sql(start_date, end_date))
+def rider_states(start_date, end_date):
+    end_date = datetime.strptime(end_date, "%Y-%m-%d") + timedelta(days=1)
 
-    shifts = cursor.fetchall()
-
-    riders_data = [{ID: shift[0], SHIFT_START_DATE:shift[1], SHIFT_START_TIME: shift[2], SHIFT_END_DATE:shift[3],
-                    SHIFT_END_TIME:shift[4], HOT_SPOT:shift[5], CITY: shift[6], RIDER_REQUIRED:shift[7]}
-                   for shift in shifts]
-
-    header = [ID, SHIFT_START_DATE, SHIFT_START_TIME, SHIFT_END_DATE, SHIFT_END_TIME, HOT_SPOT, CITY, RIDER_REQUIRED]
-
-    file_name = 'Rider Fill Rate.csv'
-    zip_file = create_csv(file_name, riders_data, header)
+    print('start',start_date)
+    print('end',end_date)
+    logs = logs_query(start_date, end_date)
+    logs_data = [{
+        AGENT_ID: log[0],
+        AGENT_NAME: log[1],
+        AGENT_EMAIL: log[2],
+        AGENT_LAST_LOGIN: log[3],
+        RIDER_ID: log[4],
+        RIDER_NAME: log[5],
+        ACTION: log[6],
+        MESSAGE: log[7],
+        DATETIME: str(log[8].date()),
+    } for log in logs]
+    header = [AGENT_ID, AGENT_NAME, AGENT_EMAIL, AGENT_LAST_LOGIN, RIDER_ID, RIDER_NAME, ACTION, MESSAGE, DATETIME]
+    file_name = 'Rider Enable Disable Report'
+    zip_file = create_csv(file_name, logs_data, header)
     attachments = [{'name': file_name + '.zip', 'content': zip_file.getvalue()}]
-    title = 'Rider Fill Report'
-    print(zip_file)
+    title = 'Rider Enable Disable Report'
+    import csv
 
 
-rider_fill_rate("2019-10-10", "2020-10-10")
+
+    # with open('countries.csv', 'w', encoding='UTF8') as f:
+    #     writer = csv.writer(f)
+    #
+    #     # write the header
+    #     writer.writerow(header)
+    #
+    #     # write the data
+    #     writer.writerow(logs_data)
+
+rider_states("2021-05-10", "2021-10-10")
 
